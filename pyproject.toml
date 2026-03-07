@@ -24,3 +24,6 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/jackxxu/bearhouse"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
