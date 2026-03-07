@@ -1,0 +1,26 @@
+[build-system]
+# Build-time requirements: keep only the build backend and its needs here.
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bearhouse"
+version = "0.1.0"
+description = "A Python package for working with parquet data lakes."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+  { name = "Xiaosong Xu", email = "jackxxu@gmail.com" }
+]
+
+# Runtime dependencies. These are installed when running `pip install .` or
+# `pip install -e .` (with a modern pip). Move runtime deps here instead of
+# listing them under `build-system.requires`.
+dependencies = [
+  "polars",
+  "sqlglot"
+]
+
+[project.urls]
+Homepage = "https://github.com/jackxxu/bearhouse"
