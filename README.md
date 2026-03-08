@@ -1,6 +1,6 @@
 # bearhouse
 
-<img src="assets/bearhouse.png" width="200" />
+<img src="https://raw.githubusercontent.com/jackxxu/bearhouse/main/assets/bearhouse.png" width="200" />
 
 A toolkit for working date-partitioned Parquet data lakes.
 
