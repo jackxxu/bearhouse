@@ -1,6 +1,6 @@
 # bearhouse
 
-<img src="assets/bearhouse.png" width="200" />
+<img src="https://raw.githubusercontent.com/jackxxu/bearhouse/main/assets/bearhouse.png" width="200" />
 
 A toolkit for working date-partitioned Parquet data lakes.
 
@@ -10,7 +10,7 @@ A toolkit for working date-partitioned Parquet data lakes.
 Bearhouse expects data organized as date-partitioned Parquet files following this convention:
 
 - **File format:** `{type}_{YYYYMMDD}.parquet`
-- **Required column:** each file must contain a `date` column of datetime type
+- **Auto-added column:** `fn_date` (type: `Date`) is automatically derived from the filename and added to every row
 
 **Example:**
 ```
@@ -34,14 +34,14 @@ df = bearhouse.execute(
 )
 ```
 
-It supports all standard sql functionalities. Below is an example sql with joins:
+It supports all standard SQL functionalities. The auto-added `fn_date` column is useful for joining tables across files from the same date:
 
 ```sql
-SELECT e._index0_ as idx, e.id AS event_id, e.event_type, m.value_int, m.value_float, e.date
+SELECT e.id AS event_id, e.event_type, m.value_int, m.value_float, e.fn_date
 FROM events e
-JOIN metrics m ON e._index0_ = m._index0_ AND e.date = m.date
+JOIN metrics m ON e.id = m.id AND e.fn_date = m.fn_date
 WHERE e.date BETWEEN '2026-03-01' AND '2026-03-02'
-ORDER BY e._index0_
+ORDER BY e.id
 ```
 
 ### Supported date filter syntax

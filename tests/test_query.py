@@ -1,4 +1,5 @@
 import os
+from datetime import date
 import polars as pl
 
 from bearhouse import query
@@ -111,3 +112,60 @@ def test_join_metrics_and_events(tmp_path):
     assert df['value_int'].to_list() == [100, 200]
     assert df['value_float'].to_list() == [10.5, 20.5]
 
+
+def test_fn_date_column(tmp_path):
+    d1 = '2026-03-01'
+    d2 = '2026-03-02'
+
+    events1 = [{'id': 1, 'event_type': 'click', 'date': d1}]
+    events2 = [{'id': 2, 'event_type': 'view', 'date': d2}]
+
+    fixtures_dir = tmp_path / "fixtures_fn_date"
+    fixtures_dir.mkdir()
+
+    _write_parquet(str(fixtures_dir), 'events', d1, events1)
+    _write_parquet(str(fixtures_dir), 'events', d2, events2)
+
+    sql = """
+    SELECT id, event_type, date, fn_date
+    FROM events
+    WHERE date BETWEEN '2026-03-01' AND '2026-03-02'
+    ORDER BY id
+    """
+    df = query.execute(sql, str(fixtures_dir))
+
+    assert 'fn_date' in df.columns
+    assert df['fn_date'].dtype == pl.Date
+    assert df['fn_date'].to_list() == [date(2026, 3, 1), date(2026, 3, 2)]
+
+
+def test_fn_date_join(tmp_path):
+    d1 = '2026-03-01'
+    d2 = '2026-03-02'
+
+    events1 = [{'id': 1, 'event_type': 'click', 'date': d1}]
+    events2 = [{'id': 2, 'event_type': 'view', 'date': d2}]
+    metrics1 = [{'id': 1, 'value': 100, 'date': d1}]
+    metrics2 = [{'id': 2, 'value': 200, 'date': d2}]
+
+    fixtures_dir = tmp_path / "fixtures_fn_date_join"
+    fixtures_dir.mkdir()
+
+    _write_parquet(str(fixtures_dir), 'events', d1, events1)
+    _write_parquet(str(fixtures_dir), 'events', d2, events2)
+    _write_parquet(str(fixtures_dir), 'metrics', d1, metrics1)
+    _write_parquet(str(fixtures_dir), 'metrics', d2, metrics2)
+
+    sql = """
+    SELECT e.id, e.event_type, m.value, e.fn_date
+    FROM events e
+    JOIN metrics m ON e.id = m.id AND e.fn_date = m.fn_date
+    WHERE e.date BETWEEN '2026-03-01' AND '2026-03-02'
+    ORDER BY e.id
+    """
+    df = query.execute(sql, str(fixtures_dir))
+
+    assert df.shape[0] == 2
+    assert df['id'].to_list() == [1, 2]
+    assert df['value'].to_list() == [100, 200]
+    assert df['fn_date'].to_list() == [date(2026, 3, 1), date(2026, 3, 2)]

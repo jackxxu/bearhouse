@@ -12,7 +12,9 @@ def _table_data(prefix: str, start_date: date, end_date: date, directory: str) -
     while current <= end_date:
         path = base / f"{prefix}_{current.strftime('%Y%m%d')}.parquet"
         if path.exists():
-            lazy_frames.append(pl.scan_parquet(path))
+            lazy_frames.append(
+                pl.scan_parquet(path).with_columns(pl.lit(current).alias("fn_date"))
+            )
         current += timedelta(days=1)
 
     if not lazy_frames:
