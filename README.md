@@ -44,12 +44,6 @@ WHERE e.date BETWEEN '2026-03-01' AND '2026-03-02'
 ORDER BY e._index0_
 ```
 
-## Installation
-
-```bash
-pip install bearhouse
-```
-
 ### Supported date filter syntax
 
 | Syntax | Example |
@@ -60,6 +54,12 @@ pip install bearhouse
 | `BETWEEN` | `WHERE date BETWEEN '2024-01-01' AND '2024-12-31'` |
 
 When no date bounds are specified, bearhouse defaults to `2000-01-01` through today.
+
+## Installation
+
+```bash
+pip install bearhouse
+```
 
 ## Requirements
 
