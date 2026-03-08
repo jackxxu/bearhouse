@@ -13,7 +13,7 @@ def _write_parquet(dirpath, prefix, iso_date, rows):
     return path
 
 
-def test_execute_between_and_eq(tmp_path, monkeypatch):
+def test_execute_between_and_eq(tmp_path):
     # prepare fixture files
     d1 = '2026-03-01'
     d2 = '2026-03-02'
@@ -27,9 +27,6 @@ def test_execute_between_and_eq(tmp_path, monkeypatch):
     _write_parquet(str(fixtures_dir), 'events', d1, events1)
     _write_parquet(str(fixtures_dir), 'events', d2, events2)
 
-    # point the library at our temp fixtures
-    monkeypatch.setenv('PARQUET_DIRECTORY', str(fixtures_dir))
-
     # query a range -> expect two rows
     sql = """
     SELECT id, event_type, date
@@ -38,19 +35,19 @@ def test_execute_between_and_eq(tmp_path, monkeypatch):
     ORDER BY id
     """
 
-    df = query.execute(sql)
+    df = query.execute(sql, str(fixtures_dir))
     assert isinstance(df, pl.DataFrame)
     assert df.shape[0] == 2
     assert df['id'].to_list() == [1, 2]
 
     # query a single date -> expect one row
     sql2 = "SELECT * FROM events WHERE date = '2026-03-01'"
-    df2 = query.execute(sql2)
+    df2 = query.execute(sql2, str(fixtures_dir))
     assert df2.shape[0] == 1
     assert df2['id'].to_list() == [1]
 
 
-def test_execute_with_multiple_data_types(tmp_path, monkeypatch):
+def test_execute_with_multiple_data_types(tmp_path):
     # create fixtures with integer and float columns
     d1 = '2026-03-01'
     d2 = '2026-03-02'
@@ -64,8 +61,6 @@ def test_execute_with_multiple_data_types(tmp_path, monkeypatch):
     _write_parquet(str(fixtures_dir), 'metrics', d1, metrics1)
     _write_parquet(str(fixtures_dir), 'metrics', d2, metrics2)
 
-    monkeypatch.setenv('PARQUET_DIRECTORY', str(fixtures_dir))
-
     sql = """
     SELECT id, value_int, value_float
     FROM metrics
@@ -73,13 +68,13 @@ def test_execute_with_multiple_data_types(tmp_path, monkeypatch):
     ORDER BY id
     """
 
-    df = query.execute(sql)
+    df = query.execute(sql, str(fixtures_dir))
     assert df.shape[0] == 2
     assert df['value_int'].to_list() == [10, 20]
     assert df['value_float'].to_list() == [1.5, 2.5]
 
 
-def test_join_metrics_and_events(tmp_path, monkeypatch):
+def test_join_metrics_and_events(tmp_path):
     # write events and metrics into the same parquet directory and join them
     d1 = '2026-03-01'
     d2 = '2026-03-02'
@@ -100,8 +95,6 @@ def test_join_metrics_and_events(tmp_path, monkeypatch):
     _write_parquet(str(fixtures_dir), 'metrics', d1, metrics1)
     _write_parquet(str(fixtures_dir), 'metrics', d2, metrics2)
 
-    monkeypatch.setenv('PARQUET_DIRECTORY', str(fixtures_dir))
-
     sql = """
     SELECT e._index0_ as idx, e.id AS event_id, e.event_type, m.value_int, m.value_float, e.date
     FROM events e
@@ -110,7 +103,7 @@ def test_join_metrics_and_events(tmp_path, monkeypatch):
     ORDER BY e._index0_
     """
 
-    df = query.execute(sql)
+    df = query.execute(sql, str(fixtures_dir))
     assert df.shape[0] == 2
     assert df['idx'].to_list() == [0, 1]
     assert df['event_id'].to_list() == [1, 2]

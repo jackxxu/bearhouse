@@ -4,8 +4,7 @@ import polars as pl
 import os
 
 
-def _table_data(prefix: str, start_date: date, end_date: date, cols: list[str] = None) -> pl.LazyFrame:
-    directory = os.environ['PARQUET_DIRECTORY']
+def _table_data(prefix: str, start_date: date, end_date: date, directory: str) -> pl.LazyFrame:
     filtered_files = []
     current = start_date
     while current <= end_date:
@@ -19,13 +18,10 @@ def _table_data(prefix: str, start_date: date, end_date: date, cols: list[str] =
         raise FileNotFoundError(f"No parquet files found for {prefix} between {start_date} and {end_date}")
 
     lazy_frames = [pl.scan_parquet(f) for f in filtered_files]
-    if cols:
-        lazy_frames = [lf.select(cols + ['date', '_index0_']) for lf in lazy_frames]
-
     return pl.concat(lazy_frames, how="vertical_relaxed")  # Use vertical_relaxed to allow for None columns
 
 
-def execute(sql: str) -> pl.DataFrame:
+def execute(sql: str, date_directory: str) -> pl.DataFrame:
     """Parse table names and date range from SQL, load parquet data, and execute the query.
 
     The `date` column filters in the WHERE clause are used to determine which
@@ -73,5 +69,5 @@ def execute(sql: str) -> pl.DataFrame:
     if end_date is None:
         end_date = date.today()
 
-    ctx = pl.SQLContext({name: _table_data(name, start_date, end_date) for name in tables})
+    ctx = pl.SQLContext({name: _table_data(name, start_date, end_date, date_directory) for name in tables})
     return ctx.execute(sql).collect()
