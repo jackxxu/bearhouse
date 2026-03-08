@@ -10,7 +10,6 @@ A toolkit for working date-partitioned Parquet data lakes.
 Bearhouse expects data organized as date-partitioned Parquet files following this convention:
 
 - **File format:** `{type}_{YYYYMMDD}.parquet`
-- **Required column:** each file must contain a `date` column of datetime type
 - **Auto-added column:** `fn_date` (type: `Date`) is automatically derived from the filename and added to every row
 
 **Example:**
